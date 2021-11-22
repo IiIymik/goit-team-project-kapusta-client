@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import styles from './HomePage.module.scss';
@@ -19,29 +19,38 @@ import CalendarPicker from '../../components/shared/Calendar/CalendarPicker';
 function HomePageMarkUp() {
   const [clickOn, setClickOn] = useState('');
   const [date, setDate] = useState(new Date());
-  const [toggleBtn, setToggleBtn] = useState(false);
+  const [toggleBtnIn, setToggleBtnIn] = useState(false);
+  const [toggleBtnEx, setToggleBtnEx] = useState(false);
   const transactions = useSelector(transactionSelectors.getTransactions);
   const isMatches = useMediaQuery('(min-width: 768px)');
 
   const handleDateSelection = day => setDate(day);
 
-  useEffect(() => {
-    switch (clickOn) {
-      case 'expense':
-        setToggleBtn(true);
-        break;
-      case 'income':
-        setToggleBtn(true);
-        break;
-      default:
-        setToggleBtn(false);
-        break;
-    }
-  }, [clickOn]);
+  // useEffect(() => {
+  //   switch (clickOn) {
+  //     case 'expense':
+  //       setToggleBtn(true);
+  //       break;
+  //     case 'income':
+  //       setToggleBtn(true);
+  //       break;
+  //     default:
+  //       setToggleBtn(false);
+  //       break;
+  //   }
+  // }, [clickOn]);
 
   const handelBtn = e => {
-    setClickOn(e.target.dataset.type);
-    setToggleBtn(state => !state);
+    const currentType = e.target.dataset.type;
+    setClickOn(currentType);
+    if (currentType === 'expense') {
+      setToggleBtnEx(state => !state);
+      setToggleBtnIn(false);
+    }
+    if (currentType === 'income') {
+      setToggleBtnIn(state => !state);
+      setToggleBtnEx(false);
+    }
   };
 
   return (
@@ -49,38 +58,38 @@ function HomePageMarkUp() {
       <Header />
       <PagesBg />
       <main className={styles.main}>
-        {!toggleBtn && (
-          <Container>
-            <div className={styles.homePageMenu}>
-              <Link to="/" className={styles.homePageToReports}>
-                <ToReports />
-              </Link>
-              <Balance />
+        {!toggleBtnIn ||
+          (!toggleBtnEx && (
+            <Container>
+              <div className={styles.homePageMenu}>
+                <Link to="/" className={styles.homePageToReports}>
+                  <ToReports />
+                </Link>
+                <Balance />
+                {!isMatches && (
+                  <div className={styles.calendar}>
+                    <CalendarPicker onSelect={handleDateSelection} />
+                  </div>
+                )}
+              </div>
+              {isMatches && (
+                <section className={styles.homePageTransactCont}>
+                  <Transactions />
+                </section>
+              )}
               {!isMatches && (
-                <div className={styles.calendar}>
-                  <CalendarPicker onSelect={handleDateSelection} />
+                <div className={styles.mobileTableWrapper}>
+                  <MobileTable transactions={transactions} />
                 </div>
               )}
-            </div>
-            {isMatches && (
-              <section className={styles.homePageTransactCont}>
-                <Transactions />
-              </section>
-            )}
-            {!isMatches && (
-              <div className={styles.mobileTableWrapper}>
-                <MobileTable transactions={transactions} />
-              </div>
-            )}
-          </Container>
-        )}
+            </Container>
+          ))}
       </main>
-      {toggleBtn && (
-        <FormInfo
-          categories={clickOn === 'expense' ? categoryGoods : categoryIncomes}
-          text={clickOn === 'expense' ? 'Категория товара' : 'Категория дохода'}
-          transactionType={clickOn}
-        />
+      {toggleBtnEx && (
+        <FormInfo categories={categoryGoods} text="Категория товара" transactionType={clickOn} />
+      )}
+      {toggleBtnIn && (
+        <FormInfo categories={categoryIncomes} text="Категория дохода" transactionType={clickOn} />
       )}
       <div className={styles.mobileBtn}>
         <MobileBtnCont handelBtn={handelBtn} />
